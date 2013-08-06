@@ -20,14 +20,18 @@
  * $Id: DumpParser.java,v 1.11 2007-11-27 09:42:20 irockel Exp $
  */
 
-package com.pironet.tda;
+package com.pironet.tda.parser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
+
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
+
+import fr.loicmathieu.bobbin.bo.Line;
 
 /**
  * Dump Parser Interface, defines base methods for all dump parsers.
@@ -35,19 +39,21 @@ import javax.swing.tree.TreePath;
  * @author irockel
  */
 public interface DumpParser {
-    public boolean hasMoreDumps();
-    
-    public MutableTreeNode parseNext();
-    
-    public void close() throws IOException;
-    
-    public void findLongRunningThreads(DefaultMutableTreeNode root, Map dumpStore, TreePath[] paths, int minOccurence, String regex);
-    
-    public void mergeDumps(DefaultMutableTreeNode root, Map dumpStore, TreePath[] dumps, int minOccurence, String regex);
+	public boolean hasMoreDumps();
 
-    public boolean isFoundClassHistograms();
-    
-    public void parseLoggcFile(InputStream loggcFileStream, DefaultMutableTreeNode root);
-    
-    public void setDumpHistogramCounter(int value);    
+	public MutableTreeNode parseNext();
+
+	public void close() throws IOException;
+
+	public void findLongRunningThreads(DefaultMutableTreeNode root, Map dumpStore, TreePath[] paths, int minOccurence, String regex);
+
+	public void mergeDumps(DefaultMutableTreeNode root, Map dumpStore, TreePath[] dumps, int minOccurence, String regex);
+
+	public boolean isFoundClassHistograms();
+
+	public void parseLoggcFile(InputStream loggcFileStream, DefaultMutableTreeNode root);
+
+	public void setDumpHistogramCounter(int value);
+
+	public List<Line> getLines();
 }

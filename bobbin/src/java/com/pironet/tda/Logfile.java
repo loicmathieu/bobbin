@@ -22,6 +22,8 @@
 
 package com.pironet.tda;
 
+import com.pironet.tda.parser.DumpParser;
+
 /**
  * root node info object of log file thread dump information
  * @author irockel

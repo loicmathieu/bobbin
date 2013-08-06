@@ -29,44 +29,45 @@ import java.util.Map;
 /**
  * stores a tree of dump files
  * @author irockel
+ * @author lmathieu
  */
 public class DumpStore implements Serializable {
-    
-    private Map dumpFiles;
-    
-    /**
-     * Creates a new instance of DumpStore
-     */
-    public DumpStore() {
-    }
-    
-    /**
-     * add the found thread dumps of a dump file to dump store
-     * @param key the key to store the thread dumps in, usually the file name
-     * @param threadDumpsInFile new found thread dumps to add.
-     */
-    public void addFileToDumpFiles(String key, Map threadDumpsInFile) {
-        // first check if map is null, and if so, create new instance
-        if(dumpFiles == null) {
-            dumpFiles = new HashMap();
-        }
-        if(threadDumpsInFile != null) {
-            dumpFiles.put(key, threadDumpsInFile);
-        }
-    }
-    
-    /**
-     * get the thread dumps for the specified file key from the store
-     */
-    public Map getFromDumpFiles(String key) {
-        return(dumpFiles != null ? (Map) dumpFiles.get(key) : null);
-    }
-    
-    /**
-     * get an iterator on the dumps file keys
-     */
-    public Iterator iterOfDumpFilesKeys() {
-        return(dumpFiles != null ? dumpFiles.keySet().iterator() : null);
-    }
-    
+	private static final long serialVersionUID = 4953625540097603774L;
+	private Map<String, Map<String, Map<String, String>>> dumpFiles;
+
+	/**
+	 * Creates a new instance of DumpStore
+	 */
+	public DumpStore() {
+	}
+
+	/**
+	 * add the found thread dumps of a dump file to dump store
+	 * @param key the key to store the thread dumps in, usually the file name
+	 * @param threadDumpsInFile new found thread dumps to add.
+	 */
+	public void addFileToDumpFiles(String key, Map<String, Map<String, String>> threadDumpsInFile) {
+		// first check if map is null, and if so, create new instance
+		if(dumpFiles == null) {
+			dumpFiles = new HashMap<>();
+		}
+		if(threadDumpsInFile != null) {
+			dumpFiles.put(key, threadDumpsInFile);
+		}
+	}
+
+	/**
+	 * get the thread dumps for the specified file key from the store
+	 */
+	public Map<String, Map<String, String>> getFromDumpFiles(String key) {
+		return(dumpFiles != null ? dumpFiles.get(key) : null);
+	}
+
+	/**
+	 * get an iterator on the dumps file keys
+	 */
+	public Iterator<String> iterOfDumpFilesKeys() {
+		return(dumpFiles != null ? dumpFiles.keySet().iterator() : null);
+	}
+
 }

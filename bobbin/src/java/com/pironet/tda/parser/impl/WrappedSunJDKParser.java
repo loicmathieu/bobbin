@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-package com.pironet.tda;
+package com.pironet.tda.parser.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,30 +28,31 @@ import com.pironet.tda.utils.DateMatcher;
 
 public class WrappedSunJDKParser extends SunJDKParser {
 
-  /**
-   * Creates a new instance of WrappedSunJDKParser: A SunJDKParser reading a lot
-   * file created by the Tanuki Service Wrapper.
-   */
-  public WrappedSunJDKParser(BufferedReader bis, Map threadStore, int lineCounter,
-                             boolean withCurrentTimeStamp, int startCounter, DateMatcher dm) {
-    super(bis, threadStore, lineCounter, withCurrentTimeStamp, startCounter, dm);
-  }
+	/**
+	 * Creates a new instance of WrappedSunJDKParser: A SunJDKParser reading a lot
+	 * file created by the Tanuki Service Wrapper.
+	 */
+	public WrappedSunJDKParser(BufferedReader bis, Map<String, Map<String, String>> threadStore, int lineCounter,
+			boolean withCurrentTimeStamp, int startCounter, DateMatcher dm) {
+		super(bis, threadStore, lineCounter, withCurrentTimeStamp, startCounter, dm);
+	}
 
-  /**
-   * check if the passed logline contains the beginning of a sun jdk thread
-   * dump.
-   *
-   * @param logLine the line of the logfile to test
-   * @return true, if the start of a sun thread dump is detected.
-   */
-  public static boolean checkForSupportedThreadDump(String logLine) {
-    return logLine.startsWith("INFO   | jvm ")
-           && logLine.trim().indexOf(" | Full thread dump") >= 0;
-  }
+	/**
+	 * check if the passed logline contains the beginning of a sun jdk thread
+	 * dump.
+	 *
+	 * @param logLine the line of the logfile to test
+	 * @return true, if the start of a sun thread dump is detected.
+	 */
+	public static boolean checkForSupportedThreadDump(String logLine) {
+		return logLine.startsWith("INFO   | jvm ")
+				&& logLine.trim().indexOf(" | Full thread dump") >= 0;
+	}
 
-  protected String getNextLine() throws IOException {
-    return getBis().readLine().substring(42);
-  }
+	@Override
+	protected String getNextLine() throws IOException {
+		return getBis().readLine().substring(42);
+	}
 
 
 }

@@ -26,6 +26,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
+
+import com.pironet.tda.parser.DumpParser;
+import com.pironet.tda.parser.DumpParserFactory;
+import com.pironet.tda.parser.impl.BeaJDKParser;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
