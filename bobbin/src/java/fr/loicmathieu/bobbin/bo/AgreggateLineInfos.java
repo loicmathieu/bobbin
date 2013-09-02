@@ -11,7 +11,7 @@ import java.util.List;
  * @author lmathieu
  *
  */
-public class AgreggateLineInfos implements Serializable {
+public class AgreggateLineInfos implements Serializable, Comparable<AgreggateLineInfos> {
 	private static final long serialVersionUID = -797579456991493917L;
 
 	private AgreggateKey key;
@@ -84,6 +84,15 @@ public class AgreggateLineInfos implements Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * We want to sort lineInfos on the more lines first
+	 * @inheritDoc
+	 */
+	@Override
+	public int compareTo(AgreggateLineInfos o) {
+		return o.getResultingLines().size() - this.resultingLines.size();
 	}
 
 

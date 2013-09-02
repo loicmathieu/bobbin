@@ -1,6 +1,7 @@
 package fr.loicmathieu.bobbin.gui;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -13,8 +14,9 @@ import com.pironet.tda.ThreadInfo;
  */
 public class LinesTableModel extends AbstractTableModel {
 
-	private Vector elements;
+	private static final long serialVersionUID = -6622531732000670171L;
 
+	private List<Object> elements = new ArrayList<>();
 	private String[] columnNames = null;
 
 	/**
@@ -24,11 +26,9 @@ public class LinesTableModel extends AbstractTableModel {
 	public LinesTableModel(DefaultMutableTreeNode rootNode) {
 		// transform child nodes in proper vector.
 		if(rootNode != null) {
-			elements = new Vector();
 			for(int i = 0; i < rootNode.getChildCount(); i++) {
 				DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) rootNode.getChildAt(i);
 				elements.add(childNode.getUserObject());
-				ThreadInfo ti = (ThreadInfo) childNode.getUserObject();
 				if(columnNames == null) {
 					columnNames = new String[] {"Name", "State", "Nb"};
 				}
@@ -50,8 +50,11 @@ public class LinesTableModel extends AbstractTableModel {
 	}
 
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		ThreadInfo ti = ((ThreadInfo) elements.elementAt(rowIndex));
+		ThreadInfo ti = ((ThreadInfo) elements.get(rowIndex));
 		String[] columns = ti.getTokens();
+		if(columnIndex == 2){
+			return Integer.parseInt(columns[columnIndex]);
+		}
 		return columns[columnIndex];
 	}
 
@@ -68,12 +71,12 @@ public class LinesTableModel extends AbstractTableModel {
 	 * @inherited
 	 */
 	@Override
-	public Class getColumnClass(int columnIndex) {
-		if(columnIndex > 1 && columnIndex < 5) {
+	public Class<?> getColumnClass(int columnIndex) {
+		if(columnIndex == 2) {
 			return Integer.class;
-		} else {
-			return String.class;
 		}
+
+		return String.class;
 	}
 
 	/**

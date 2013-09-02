@@ -126,7 +126,7 @@ public class SunJDKParser extends AbstractDumpParser {
 			DefaultMutableTreeNode catSleeping = null;
 			DefaultMutableTreeNode catWaiting = null;
 
-			//addon LMA : category for class based analysis
+			//LMA : category for class based analysis
 			DefaultMutableTreeNode catPackage = null;
 			DefaultMutableTreeNode catClass = null;
 			DefaultMutableTreeNode catMethod = null;
@@ -177,6 +177,7 @@ public class SunJDKParser extends AbstractDumpParser {
 				boolean concurrentSyncsFlag = false;
 				Matcher matched = getDm().getLastMatch();
 				State threadState = null;
+				String tid = null;
 
 				while (getBis().ready() && !finished) {
 					line = getNextLine();
@@ -228,6 +229,7 @@ public class SunJDKParser extends AbstractDumpParser {
 							// First, flush state for the previous thread (if any)
 							concurrentSyncsFlag = false;
 							threadState = null;
+							tid = null;
 							String stringContent = content != null ? content.toString() : null;
 							if (title != null) {
 								threads.put(title, content.toString());
@@ -275,11 +277,14 @@ public class SunJDKParser extends AbstractDumpParser {
 									//nothing here
 								}
 							}
+
+							//LMA : extract thread ID
+							tid = extractTIDFromLine(line);
 						} else if (line.indexOf("at ") >= 0) {
 							//LMA : add calling line information
 							Line threadLine = new Line(line.substring(line.indexOf("at ") + 3));
 							threadLine.setThreadState(threadState);
-							//TODO add threadId
+							threadLine.setThreadId(tid);
 							//TODO add thread category
 							//TODO compute stack depth;
 							getLines().add(threadLine);
@@ -449,7 +454,7 @@ public class SunJDKParser extends AbstractDumpParser {
 				// check custom categories
 				addCustomCategories(threadDump);
 
-				//addon LMA : create category for class based analysis
+				//LMA : create category for class based analysis
 				//TODO create specific icons
 				Collection<AgreggateLineInfos> linesForPackage = computeLinesForPackage();
 				catPackage = new DefaultMutableTreeNode(new TableCategory("Package (" + linesForPackage.size() + ")", IconFactory.THREADS, false, TableCategory.Model.LINES));
@@ -507,14 +512,39 @@ public class SunJDKParser extends AbstractDumpParser {
 		return (null);
 	}
 
+	/**
+	 * addon LMA : extract a TID from the first line of a thread stack
+	 * @param line
+	 * @return
+	 */
+	private String extractTIDFromLine(String line) {
+		String tid = null;
+		if ((line.indexOf("tid=") >= 0) && (line.indexOf("nid=") >= 0)) {
+			tid = String.valueOf(Long.parseLong(line.substring(line.indexOf("tid=") + 6, line.indexOf("nid=") - 1), 16));
+		} else if (line.indexOf("tid=") >= 0) {
+			tid = String.valueOf(Long.parseLong(line.substring(line.indexOf("tid=") + 6), 16));
+		}
+		return tid;
+	}
+
+	/**
+	 * Build line content
+	 * @param resultingLines
+	 * @return line content
+	 */
 	private String buildContentFromResultingLines(List<Line> resultingLines) {
 		StringBuilder content = new StringBuilder();
 		for(Line l : resultingLines){
-			content.append(l.toString()).append("<br/>");
+			content.append(l.lineInfoToString()).append("<br/>");
 		}
 		return content.toString();
 	}
 
+	/**
+	 * Build line row
+	 * @param info
+	 * @return line row as String []
+	 */
 	private String[] buildRowFromAgreggateInfo(AgreggateLineInfos info) {
 		String [] row = new String[3];
 		row[0] = info.getKey().getAggregate();
@@ -563,9 +593,8 @@ public class SunJDKParser extends AbstractDumpParser {
 
 			monitor = "<a href=\"monitor://<" + monitor + ">\">" + monitorHex + "</a>";
 			return (begin + monitor + end);
-		} else {
-			return (line);
 		}
+		return (line);
 	}
 
 	/**

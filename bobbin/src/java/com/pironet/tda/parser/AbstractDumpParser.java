@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -486,7 +487,9 @@ public abstract class AbstractDumpParser implements DumpParser {
 			map.put(key, info);
 		}
 
-		return map.values();
+		List<AgreggateLineInfos> list = new ArrayList<>(map.values());
+		Collections.sort(list);
+		return list;
 	}
 
 	/**
@@ -508,7 +511,9 @@ public abstract class AbstractDumpParser implements DumpParser {
 			map.put(key, info);
 		}
 
-		return map.values();
+		List<AgreggateLineInfos> list = new ArrayList<>(map.values());
+		Collections.sort(list);
+		return list;
 	}
 
 	/**
@@ -519,7 +524,7 @@ public abstract class AbstractDumpParser implements DumpParser {
 		// parsing package data
 		for (Line line : getLines()) {
 			AgreggateKey key = new AgreggateKey();
-			key.setAggregate(line.getPackageName() + "." + line.getClassName() + "." + line.getMethodName());
+			key.setAggregate(line.getPackageName() + "." + line.getClassName() + "." + line.getMethodName() + "()");
 			key.setThreadState(line.getThreadState());
 			AgreggateLineInfos info = map.get(key);
 			if (info == null) {
@@ -530,7 +535,9 @@ public abstract class AbstractDumpParser implements DumpParser {
 			map.put(key, info);
 		}
 
-		return map.values();
+		List<AgreggateLineInfos> list = new ArrayList<>(map.values());
+		Collections.sort(list);
+		return list;
 	}
 
 	/**
@@ -541,7 +548,7 @@ public abstract class AbstractDumpParser implements DumpParser {
 		// parsing package data
 		for (Line line : getLines()) {
 			AgreggateKey key = new AgreggateKey();
-			key.setAggregate(line.getPackageName() + "." + line.getClassName() + "." + line.getMethodName() + ":" + line.getLineNumber());
+			key.setAggregate(line.getPackageName() + "." + line.getClassName() + "." + line.getMethodName() + "():" + line.getLineNumber());
 			key.setThreadState(line.getThreadState());
 			AgreggateLineInfos info = map.get(key);
 			if (info == null) {
@@ -552,6 +559,8 @@ public abstract class AbstractDumpParser implements DumpParser {
 			map.put(key, info);
 		}
 
-		return map.values();
+		List<AgreggateLineInfos> list = new ArrayList<>(map.values());
+		Collections.sort(list);
+		return list;
 	}
 }

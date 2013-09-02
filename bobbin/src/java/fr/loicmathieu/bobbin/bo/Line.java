@@ -10,6 +10,9 @@ import java.lang.Thread.State;
  *
  */
 public class Line implements Serializable {
+	private static final String NO_THREAD_ID_PROVIDED = "<no thread ID provided>";
+	private static final String NO_LINE_NUMBER_PROVIDED = "<no line number provided>";
+	private static final String NO_PACKAGE = "<no package>";
 	private static final long serialVersionUID = 4423799918054081697L;
 	private static final String UNKNOW_SOURCE = "Unknown Source";
 	private static final String NATIVE_METHOD = "Native Method";
@@ -50,6 +53,9 @@ public class Line implements Serializable {
 		//finally, extract package if any
 		if(workingLine.indexOf('.') != -1){
 			this.packageName = workingLine.substring(0, workingLine.lastIndexOf('.'));
+		}
+		else {
+			this.packageName = NO_PACKAGE;
 		}
 	}
 
@@ -144,6 +150,17 @@ public class Line implements Serializable {
 		return "Line [packageName=" + packageName + ", className=" + className + ", methodName=" + methodName + ", lineNumber=" + lineNumber
 				+ ", threadState=" + threadState + ", threadCategory=" + threadCategory + ", threadId=" + threadId + ", isNative=" + isNative + ", isSourceUnknown=" + isSourceUnknown
 				+ ", stackDepth=" + stackDepth + "]";
+	}
+
+	public String lineInfoToString(){
+		String threadLink = NO_THREAD_ID_PROVIDED;
+		if(threadId != null){
+			threadLink = "<a href=\"thread://" + threadId + "\">" + threadId + "</a>";
+		}
+
+		return packageName + "." + className + "." + methodName + "()"
+		+ (lineNumber != NO_LINE_NUMBER ? (":" + lineNumber) : NO_LINE_NUMBER_PROVIDED)
+		+ " - Thread ID : " + threadLink;
 	}
 
 }

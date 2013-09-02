@@ -115,6 +115,7 @@ import com.pironet.tda.parser.DumpParser;
 import com.pironet.tda.parser.DumpParserFactory;
 import com.pironet.tda.utils.AppInfo;
 import com.pironet.tda.utils.Browser;
+import com.pironet.tda.utils.ColoredTable;
 import com.pironet.tda.utils.HistogramTableModel;
 import com.pironet.tda.utils.MonitorComparator;
 import com.pironet.tda.utils.PrefManager;
@@ -303,6 +304,10 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 				if (evt.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
 					if (evt.getDescription().startsWith("monitor")) {
 						navigateToMonitor(evt.getDescription());
+					}
+					//LMA : add thread link
+					else if (evt.getDescription().startsWith("thread") && ! evt.getDescription().startsWith("threaddump")){
+						navigateToThread(evt.getDescription());
 					}
 					else if (evt.getDescription().startsWith("dump")) {
 						navigateToDump();
@@ -1523,6 +1528,60 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 			searchTree.setSelectionPath(threadInMonitor);
 			searchTree.scrollPathToVisible(searchPath);
 			searchTree.setSelectionPath(searchPath);
+		}
+	}
+
+	/**
+	 * addon LMA
+	 * @param threadLink
+	 */
+	private void navigateToThread(String threadLink){
+		String tid = threadLink.substring(9);
+
+		//find dump node
+		DefaultMutableTreeNode dumpNode = null;
+		if (threadLink.indexOf("Dump No.") > 0) {
+			dumpNode = getDumpRootNode(threadLink.substring(threadLink.indexOf('/') + 1, threadLink.lastIndexOf('/')),
+					(DefaultMutableTreeNode) tree.getLastSelectedPathComponent());
+		}
+		else {
+			dumpNode = getDumpRootNode((DefaultMutableTreeNode) tree.getLastSelectedPathComponent());
+		}
+
+		//find Thread node
+		Enumeration childs = dumpNode.children();
+		DefaultMutableTreeNode threadNode = null;
+		while (childs.hasMoreElements()) {
+			DefaultMutableTreeNode child = (DefaultMutableTreeNode) childs.nextElement();
+			if (child.getUserObject() instanceof TableCategory) {
+				if (((TableCategory) child.getUserObject()).getName().startsWith("Threads (")) {
+					threadNode = child;
+				}
+			}
+		}
+
+		//jump to thread node
+		TreePath threadPath = new TreePath(threadNode.getPath());
+		tree.setSelectionPath(threadPath);
+		tree.scrollPathToVisible(threadPath);
+		displayCategory(threadNode.getUserObject());
+
+		//highlight chosen thread
+		ColoredTable searchTable = (ColoredTable) ((TableCategory) threadNode.getUserObject()).getCatComponent(this);
+		for (int row = 0; row < searchTable.getRowCount(); row++) {
+			if (tid.equals(searchTable.getValueAt(row, 3).toString())) {
+
+				// this will automatically set the view of the scroll in the location of the value
+				searchTable.scrollRectToVisible(searchTable.getCellRect(row, 0, true));
+
+				// this will automatically set the focus of the searched/selected row/value
+				searchTable.setRowSelectionInterval(row, row);
+
+				//                     for (int i = 0; i <= searchTable.getColumnCount() - 1; i++) {
+				//
+				//                    	 searchTable.getColumnModel().getColumn(i).setCellRenderer(new HighlightRenderer());
+				//                     }
+			}
 		}
 	}
 
