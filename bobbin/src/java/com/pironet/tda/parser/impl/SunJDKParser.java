@@ -27,10 +27,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.Thread.State;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.Vector;
@@ -54,6 +56,7 @@ import com.pironet.tda.utils.DateMatcher;
 import com.pironet.tda.utils.HistogramTableModel;
 import com.pironet.tda.utils.IconFactory;
 
+import fr.loicmathieu.bobbin.bo.AgreggateLineInfos;
 import fr.loicmathieu.bobbin.bo.Line;
 
 /**
@@ -61,6 +64,7 @@ import fr.loicmathieu.bobbin.bo.Line;
  * Needs to be closed after use (so inner stream is closed).
  *
  * @author irockel
+ * @author lmathieu
  */
 public class SunJDKParser extends AbstractDumpParser {
 
@@ -121,6 +125,13 @@ public class SunJDKParser extends AbstractDumpParser {
 			DefaultMutableTreeNode catBlockingMonitors = null;
 			DefaultMutableTreeNode catSleeping = null;
 			DefaultMutableTreeNode catWaiting = null;
+
+			//addon LMA : category for class based analysis
+			DefaultMutableTreeNode catPackage = null;
+			DefaultMutableTreeNode catClass = null;
+			DefaultMutableTreeNode catMethod = null;
+			DefaultMutableTreeNode catMethodWithLine = null;
+
 
 			try {
 				Map<String, String> threads = new HashMap<String, String>();
@@ -438,15 +449,43 @@ public class SunJDKParser extends AbstractDumpParser {
 				// check custom categories
 				addCustomCategories(threadDump);
 
-				//TODO put all this in the GUI
-				System.out.println("computeLinesForPackage\n---------------------------");
-				computeLinesForPackage();
-				System.out.println("computeLinesForClass\n---------------------------");
-				computeLinesForClass();
-				System.out.println("computeLinesForMethod\n---------------------------");
-				computeLinesForMethod();
-				System.out.println("computeLinesForMethodWithLine\n---------------------------");
-				computeLinesForMethodWithLine();
+				//addon LMA : create category for class based analysis
+				//TODO create specific icons
+				Collection<AgreggateLineInfos> linesForPackage = computeLinesForPackage();
+				catPackage = new DefaultMutableTreeNode(new TableCategory("Package (" + linesForPackage.size() + ")", IconFactory.THREADS, false, TableCategory.Model.LINES));
+				for(AgreggateLineInfos info : linesForPackage){
+					String [] row = buildRowFromAgreggateInfo(info);
+					String infoContent = buildContentFromResultingLines(info.getResultingLines());
+					addToCategory(catPackage, row, null, infoContent, 0);
+				}
+				threadDump.add(catPackage);
+
+				Collection<AgreggateLineInfos> linesForClass = computeLinesForClass();
+				catClass = new DefaultMutableTreeNode(new TableCategory("Class (" + linesForClass.size() + ")", IconFactory.THREADS, false, TableCategory.Model.LINES));
+				for(AgreggateLineInfos info : linesForClass){
+					String [] row = buildRowFromAgreggateInfo(info);
+					String infoContent = buildContentFromResultingLines(info.getResultingLines());
+					addToCategory(catClass, row, null, infoContent, 0);
+				}
+				threadDump.add(catClass);
+
+				Collection<AgreggateLineInfos> linesForMethod = computeLinesForMethod();
+				catMethod = new DefaultMutableTreeNode(new TableCategory("Method (" + linesForMethod.size() + ")", IconFactory.THREADS, false, TableCategory.Model.LINES));
+				for(AgreggateLineInfos info : linesForMethod){
+					String [] row = buildRowFromAgreggateInfo(info);
+					String infoContent = buildContentFromResultingLines(info.getResultingLines());
+					addToCategory(catMethod, row, null, infoContent, 0);
+				}
+				threadDump.add(catMethod);
+
+				Collection<AgreggateLineInfos> linesForMethodWithLine = computeLinesForMethodWithLine();
+				catMethodWithLine = new DefaultMutableTreeNode(new TableCategory("MethodWithLines (" + linesForMethodWithLine.size() + ")", IconFactory.THREADS, false, TableCategory.Model.LINES));
+				for(AgreggateLineInfos info : linesForMethodWithLine){
+					String [] row = buildRowFromAgreggateInfo(info);
+					String infoContent = buildContentFromResultingLines(info.getResultingLines());
+					addToCategory(catMethodWithLine, row, null, infoContent, 0);
+				}
+				threadDump.add(catMethodWithLine);
 
 				return (threadCount > 0 ? threadDump : null);
 			} catch (FileNotFoundException e) {
@@ -466,6 +505,23 @@ public class SunJDKParser extends AbstractDumpParser {
 		} while (retry);
 
 		return (null);
+	}
+
+	private String buildContentFromResultingLines(List<Line> resultingLines) {
+		StringBuilder content = new StringBuilder();
+		for(Line l : resultingLines){
+			content.append(l.toString()).append("<br/>");
+		}
+		return content.toString();
+	}
+
+	private String[] buildRowFromAgreggateInfo(AgreggateLineInfos info) {
+		String [] row = new String[3];
+		row[0] = info.getKey().getAggregate();
+		row[1] = info.getKey().getThreadState().toString();
+		row[2] = String.valueOf(info.getResultingLines().size());
+
+		return row;
 	}
 
 	/**

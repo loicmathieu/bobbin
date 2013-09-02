@@ -130,6 +130,8 @@ import com.pironet.tda.utils.ViewScrollPane;
 import com.pironet.tda.utils.jedit.JEditTextArea;
 import com.pironet.tda.utils.jedit.PopupMenu;
 
+import fr.loicmathieu.bobbin.gui.LinesTableModel;
+
 /**
  * main class of the Thread Dump Analyzer. Start using static main method.
  * 
@@ -1152,7 +1154,14 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		int[] rows = ttsm.getTable().getSelectedRows();
 		StringBuffer sb = new StringBuffer();
 		for (int row : rows) {
-			appendThreadInfo(sb, ((ThreadsTableModel) ts.getTableModel()).getInfoObjectAtRow(ts.modelIndex(row)));
+			//addon LMA : enable different display for threads and lines
+			//TODO find a bette way to do this
+			if(ts.getTableModel() instanceof LinesTableModel){
+				appendThreadInfo(sb, ((LinesTableModel) ts.getTableModel()).getInfoObjectAtRow(ts.modelIndex(row)));
+			}
+			else {
+				appendThreadInfo(sb, ((ThreadsTableModel) ts.getTableModel()).getInfoObjectAtRow(ts.modelIndex(row)));
+			}
 		}
 		displayContent(sb.toString());
 		setThreadDisplay(true);

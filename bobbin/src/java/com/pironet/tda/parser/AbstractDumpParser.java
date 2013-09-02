@@ -22,6 +22,7 @@ package com.pironet.tda.parser;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -279,12 +280,31 @@ public abstract class AbstractDumpParser implements DumpParser {
 	 * @param info the info part of the new node
 	 * @param content the content part of the new node
 	 * @param lineCount the line count of the thread stack, 0 if not applicable for this element.
+	 * @param parseTokens true if tokens needs to be parsed (only applicabel for thread info)
 	 * @see ThreadInfo
 	 */
 	protected void addToCategory(DefaultMutableTreeNode category, String title, StringBuffer info, String content, int lineCount, boolean parseTokens) {
 		DefaultMutableTreeNode threadInfo = null;
 		threadInfo = new DefaultMutableTreeNode(new ThreadInfo(title, info != null ? info.toString() : null, content, lineCount,
 				parseTokens ? getThreadTokens(title) : null));
+		((Category) category.getUserObject()).addToCatNodes(threadInfo);
+	}
+
+	/**
+	 * addon LMA
+	 * create a category entry for a category (categories are "Monitors", "Threads waiting", e.g.). A ThreadInfo
+	 * instance will be created with the passed information.
+	 * 
+	 * @param category the category the node should be added to.
+	 * @param row the row elements, the first element will be used as nam
+	 * @param info the info part of the new node
+	 * @param content the content part of the new node
+	 * @param lineCount the line count of the thread stack, 0 if not applicable for this element.
+	 * @see ThreadInfo
+	 */
+	protected void addToCategory(DefaultMutableTreeNode category, String[] row, StringBuffer info, String content, int lineCount) {
+		DefaultMutableTreeNode threadInfo = null;
+		threadInfo = new DefaultMutableTreeNode(new ThreadInfo(row[0], info != null ? info.toString() : null, content, lineCount, row));
 		((Category) category.getUserObject()).addToCatNodes(threadInfo);
 	}
 
@@ -437,11 +457,20 @@ public abstract class AbstractDumpParser implements DumpParser {
 		}
 	}
 
+	/**
+	 * addon LMA
+	 * 
+	 * @inheritDoc
+	 */
+	@Override
 	public List<Line> getLines() {
 		return lines;
 	}
 
-	public void computeLinesForPackage() {
+	/**
+	 * addon LMA
+	 */
+	public Collection<AgreggateLineInfos> computeLinesForPackage() {
 		Map<AgreggateKey, AgreggateLineInfos> map = new HashMap<>();
 		// parsing package data
 		for (Line line : getLines()) {
@@ -457,14 +486,13 @@ public abstract class AbstractDumpParser implements DumpParser {
 			map.put(key, info);
 		}
 
-		// outputing package data
-		// TODO add this in GUI
-		for (AgreggateLineInfos info : map.values()) {
-			System.out.println(info);
-		}
+		return map.values();
 	}
 
-	public void computeLinesForClass() {
+	/**
+	 * addon LMA
+	 */
+	public Collection<AgreggateLineInfos> computeLinesForClass() {
 		Map<AgreggateKey, AgreggateLineInfos> map = new HashMap<>();
 		// parsing package data
 		for (Line line : getLines()) {
@@ -480,14 +508,13 @@ public abstract class AbstractDumpParser implements DumpParser {
 			map.put(key, info);
 		}
 
-		// outputing class data
-		// TODO add this in GUI
-		for (AgreggateLineInfos info : map.values()) {
-			System.out.println(info);
-		}
+		return map.values();
 	}
 
-	public void computeLinesForMethod() {
+	/**
+	 * addon LMA
+	 */
+	public Collection<AgreggateLineInfos> computeLinesForMethod() {
 		Map<AgreggateKey, AgreggateLineInfos> map = new HashMap<>();
 		// parsing package data
 		for (Line line : getLines()) {
@@ -503,14 +530,13 @@ public abstract class AbstractDumpParser implements DumpParser {
 			map.put(key, info);
 		}
 
-		// outputing method data
-		// TODO add this in GUI
-		for (AgreggateLineInfos info : map.values()) {
-			System.out.println(info);
-		}
+		return map.values();
 	}
 
-	public void computeLinesForMethodWithLine() {
+	/**
+	 * addon LMA
+	 */
+	public Collection<AgreggateLineInfos> computeLinesForMethodWithLine() {
 		Map<AgreggateKey, AgreggateLineInfos> map = new HashMap<>();
 		// parsing package data
 		for (Line line : getLines()) {
@@ -526,10 +552,6 @@ public abstract class AbstractDumpParser implements DumpParser {
 			map.put(key, info);
 		}
 
-		// outputing method with line data
-		// TODO add this in GUI
-		for (AgreggateLineInfos info : map.values()) {
-			System.out.println(info);
-		}
+		return map.values();
 	}
 }
