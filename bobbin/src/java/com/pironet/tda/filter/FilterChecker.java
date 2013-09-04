@@ -62,7 +62,7 @@ public class FilterChecker {
         generalFilters = new HashMap();
         ListModel filters = PrefManager.get().getFilters();
         for(int i = 0; i < filters.getSize(); i++) {
-            Filter currentFilter = (Filter) filters.getElementAt(i);
+            ThreadFilter currentFilter = (ThreadFilter) filters.getElementAt(i);
             if(currentFilter.isEnabled() && currentFilter.isGeneralFilter()) {
                 generalFilters.put(currentFilter.getName(), currentFilter);
             }
@@ -72,7 +72,7 @@ public class FilterChecker {
     /**
      * add the given filter to the lists of filters
      */
-    public void addToFilters(Filter filter) {
+    public void addToFilters(ThreadFilter filter) {
         if(filters == null) {
             filters = new HashMap();
         }
@@ -85,9 +85,9 @@ public class FilterChecker {
      * @param key the name of the filter.
      * @return filter with the given name, null otherwise.
      */
-    public Filter getFromFilters(String key) {
+    public ThreadFilter getFromFilters(String key) {
         System.out.println("getFromFilters= " + key);
-        return (filters != null ? (Filter) filters.get(key) : null);
+        return (filters != null ? (ThreadFilter) filters.get(key) : null);
     }
     
     /**
@@ -98,7 +98,7 @@ public class FilterChecker {
         boolean result = true;
         Iterator filterIter = filters.values().iterator();
         while(result && filterIter.hasNext()) {
-            Filter filter = (Filter) filterIter.next();
+            ThreadFilter filter = (ThreadFilter) filterIter.next();
             result = filter.matches(ti);
         }
         return(result);
@@ -111,7 +111,7 @@ public class FilterChecker {
         
         // remove disabled filters
         while(iter.hasNext()) {
-            Filter filter = (Filter) iter.next();
+            ThreadFilter filter = (ThreadFilter) iter.next();
             if(!filter.isEnabled()) {
                 filters.remove(filter.getName());
                 iter = filters.values().iterator();
@@ -122,7 +122,7 @@ public class FilterChecker {
         // add new or enabled filters
         iter = generalFilters.values().iterator();
         while(iter.hasNext()) {
-            Filter filter = (Filter) iter.next();
+            ThreadFilter filter = (ThreadFilter) iter.next();
             addToFilters(filter);
         }
         return(check(ti));

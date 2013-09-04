@@ -21,7 +21,7 @@
  */
 package com.pironet.tda;
 
-import com.pironet.tda.filter.Filter;
+import com.pironet.tda.filter.ThreadFilter;
 import com.pironet.tda.utils.PrefManager;
 import com.pironet.tda.utils.ResourceManager;
 import java.awt.BorderLayout;
@@ -125,7 +125,7 @@ public class EditCustomCategoryDialog extends JDialog {
         DefaultListModel dlm = ((DefaultListModel) settingsPanel.catFilters.getModel());
         cat.resetFilters();
         for(int i = 0; i < dlm.getSize(); i++) {
-            cat.addToFilters((Filter) dlm.elementAt(i));
+            cat.addToFilters((ThreadFilter) dlm.elementAt(i));
         }
     }
     
@@ -170,7 +170,7 @@ public class EditCustomCategoryDialog extends JDialog {
             name.setText(presetCategory.getName());
             DefaultListModel dlm = (DefaultListModel) filterList.getModel();
             for(int i = 0; i < dlm.getSize(); i++) {
-                if(presetCategory.hasInFilters(((Filter) dlm.elementAt(i)).getName())) {
+                if(presetCategory.hasInFilters(((ThreadFilter) dlm.elementAt(i)).getName())) {
                     moveFilter(filterList, catFilters, i);
                     
                     // fix index.
@@ -283,7 +283,7 @@ public class EditCustomCategoryDialog extends JDialog {
         }
         
         private void moveFilter(JList fromList, JList toList, int selectedItem) {
-            Filter filter = (Filter) ((DefaultListModel) fromList.getModel()).getElementAt(selectedItem);
+            ThreadFilter filter = (ThreadFilter) ((DefaultListModel) fromList.getModel()).getElementAt(selectedItem);
             ((DefaultListModel) fromList.getModel()).removeElementAt(selectedItem);
             
             DefaultListModel dlm = ((DefaultListModel) toList.getModel());

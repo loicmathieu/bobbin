@@ -24,7 +24,7 @@
 package com.pironet.tda.utils;
 
 import com.pironet.tda.CustomCategory;
-import com.pironet.tda.filter.Filter;
+import com.pironet.tda.filter.ThreadFilter;
 import com.pironet.tda.filter.FilterChecker;
 import java.awt.Dimension;
 import java.awt.Point;
@@ -295,7 +295,7 @@ public class PrefManager {
                 try {
                     for(int i = 0; i < sFilters.length; i++) {
                         String[] filterData = sFilters[i].split(FILTER_SEP);
-                        Filter newFilter = new Filter(filterData[0],
+                        ThreadFilter newFilter = new ThreadFilter(filterData[0],
                                 filterData[1], Integer.parseInt(filterData[2]),
                                 filterData[3].equals("true"), filterData[4].equals("true"), filterData[5].equals("true"));
                         filters.add(i, newFilter);
@@ -367,7 +367,7 @@ public class PrefManager {
                         CustomCategory newCat = new CustomCategory(catData[0]);
                         
                         for(int j = 1; j < catData.length; j++) {
-                            Filter filter = getFromFilters(catData[j].trim());
+                            ThreadFilter filter = getFromFilters(catData[j].trim());
                             if(filter != null) {
                                 newCat.addToFilters(filter);
                             }
@@ -426,10 +426,10 @@ public class PrefManager {
      * @param key filter key to look up
      * @return filter, null otherwise.
      */
-    private Filter getFromFilters(String key) {
+    private ThreadFilter getFromFilters(String key) {
         ListModel filters = getFilters();
         for(int i = 0; i < filters.getSize(); i++) {
-            Filter filter = (Filter) filters.getElementAt(i);
+            ThreadFilter filter = (ThreadFilter) filters.getElementAt(i);
             if(filter.getName().equals(key)) {
                 return(filter);
             } 
@@ -442,11 +442,11 @@ public class PrefManager {
      * generate the default filter set.
      */
     private DefaultListModel getPredefinedFilters() {
-        Filter newFilter = new Filter("System Thread Exclusion Filter", ".*at\\s.*", Filter.HAS_IN_STACK_RULE, true, false, false);
+        ThreadFilter newFilter = new ThreadFilter("System Thread Exclusion Filter", ".*at\\s.*", ThreadFilter.HAS_IN_STACK_RULE, true, false, false);
         DefaultListModel filters = new DefaultListModel();
         filters.ensureCapacity(2);
         filters.add(0, newFilter);
-        newFilter = new Filter("Idle Threads Filter", "", Filter.SLEEPING_RULE, true, true, false);
+        newFilter = new ThreadFilter("Idle Threads Filter", "", ThreadFilter.SLEEPING_RULE, true, true, false);
         filters.add(1, newFilter);
         return(filters);
     }
@@ -458,17 +458,17 @@ public class PrefManager {
             if(i > 0) {
                 filterString.append(PARAM_DELIM);
             }
-            filterString.append(((Filter)filters.getElementAt(i)).getName());
+            filterString.append(((ThreadFilter)filters.getElementAt(i)).getName());
             filterString.append(FILTER_SEP);
-            filterString.append(((Filter)filters.getElementAt(i)).getFilterExpression());
+            filterString.append(((ThreadFilter)filters.getElementAt(i)).getFilterExpression());
             filterString.append(FILTER_SEP);
-            filterString.append(((Filter)filters.getElementAt(i)).getFilterRule());
+            filterString.append(((ThreadFilter)filters.getElementAt(i)).getFilterRule());
             filterString.append(FILTER_SEP);
-            filterString.append(((Filter)filters.getElementAt(i)).isGeneralFilter());
+            filterString.append(((ThreadFilter)filters.getElementAt(i)).isGeneralFilter());
             filterString.append(FILTER_SEP);
-            filterString.append(((Filter)filters.getElementAt(i)).isExclusionFilter());
+            filterString.append(((ThreadFilter)filters.getElementAt(i)).isExclusionFilter());
             filterString.append(FILTER_SEP);
-            filterString.append(((Filter)filters.getElementAt(i)).isEnabled());
+            filterString.append(((ThreadFilter)filters.getElementAt(i)).isEnabled());
         }
         toolPrefs.put("filters", filterString.toString());
 	setFilterCache(filters);
@@ -491,7 +491,7 @@ public class PrefManager {
             catString.append(FILTER_SEP);
             Iterator catIter = cat.iterOfFilters();
             while ((catIter != null) && (catIter.hasNext())) {
-                Filter filter = (Filter) catIter.next();
+                ThreadFilter filter = (ThreadFilter) catIter.next();
                 catString.append(filter.getName());
                 catString.append(FILTER_SEP);
                 

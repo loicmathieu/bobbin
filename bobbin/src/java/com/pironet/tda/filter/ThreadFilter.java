@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  *
  * @author irockel
  */
-public class Filter {
+public class ThreadFilter {
     
     // static defines for filter rules.
     public static final int HAS_IN_TITLE_RULE = 0;
@@ -89,7 +89,7 @@ public class Filter {
     /**
      * empty default constructor
      */
-    public Filter() {
+    public ThreadFilter() {
     }
         
     /** 
@@ -98,7 +98,7 @@ public class Filter {
      * @param regEx the reg ex of the filter
      * @param gf true, if filter is general filter
      */
-    public Filter(String name, String regEx, int fr, boolean gf, boolean exf, boolean enabled) {
+    public ThreadFilter(String name, String regEx, int fr, boolean gf, boolean exf, boolean enabled) {
         setName(name);
         setFilterExpression(regEx);
         setGeneralFilter(gf);

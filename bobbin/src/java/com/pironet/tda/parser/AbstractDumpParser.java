@@ -40,7 +40,7 @@ import com.pironet.tda.TDA;
 import com.pironet.tda.TableCategory;
 import com.pironet.tda.ThreadDumpInfo;
 import com.pironet.tda.ThreadInfo;
-import com.pironet.tda.filter.Filter;
+import com.pironet.tda.filter.ThreadFilter;
 import com.pironet.tda.utils.DateMatcher;
 import com.pironet.tda.utils.IconFactory;
 import com.pironet.tda.utils.PrefManager;
@@ -443,7 +443,7 @@ public abstract class AbstractDumpParser implements DumpParser {
 				boolean matches = true;
 				ThreadInfo ti = (ThreadInfo) threads.getNodeAt(j).getUserObject();
 				while (matches && filterIter.hasNext()) {
-					Filter filter = (Filter) filterIter.next();
+					ThreadFilter filter = (ThreadFilter) filterIter.next();
 					matches = filter.matches(ti, true);
 				}
 

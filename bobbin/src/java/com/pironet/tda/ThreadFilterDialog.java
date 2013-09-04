@@ -42,12 +42,12 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 /**
- * overview of all available filters
+ * overview of all available thread filters
  * @author irockel
  */
-public class FilterDialog extends JDialog {
+public class ThreadFilterDialog extends JDialog {
 
-    private FilterPanel filterPanel;
+    private ThreadFilterPanel filterPanel;
     private JPanel buttonPanel;
     private JButton closeButton;
     private Frame frame;
@@ -55,8 +55,8 @@ public class FilterDialog extends JDialog {
     /**
      * Creates a new instance of PreferencesDialog
      */
-    public FilterDialog(Frame owner) {
-        super(owner, "Filter Settings");
+    public ThreadFilterDialog(Frame owner) {
+        super(owner, "Thread Filter Settings");
         try {
             setIconImage(TDA.createImageIcon("Filters.gif").getImage());
         } catch (NoSuchMethodError nsme) {
@@ -69,7 +69,7 @@ public class FilterDialog extends JDialog {
     }
 
     private void initPanel() {
-        filterPanel = new FilterPanel((JFrame) this.getOwner());
+        filterPanel = new ThreadFilterPanel((JFrame) this.getOwner());
         getContentPane().add(filterPanel, BorderLayout.CENTER);
         closeButton = new JButton("Close");
         buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -92,7 +92,7 @@ public class FilterDialog extends JDialog {
         getRootPane().setDefaultButton(closeButton);
     }
 
-    public static class FilterPanel extends JPanel implements ActionListener, ListSelectionListener {
+    public static class ThreadFilterPanel extends JPanel implements ActionListener, ListSelectionListener {
 
         JButton addButton = null;
         JButton removeButton = null;
@@ -102,7 +102,7 @@ public class FilterDialog extends JDialog {
         JScrollPane scrollPane = null;
         Frame owner = null;
 
-        public FilterPanel(Frame owner) {
+        public ThreadFilterPanel(Frame owner) {
             this.owner = owner;
             setLayout(new BorderLayout());
 
@@ -166,7 +166,7 @@ public class FilterDialog extends JDialog {
         }
 
         private void createFilterDialog(String title, boolean isAdd, int selectedIndex) {
-            EditFilterDialog fDiag = new EditFilterDialog(owner, title, filterList, isAdd);
+            EditThreadFilterDialog fDiag = new EditThreadFilterDialog(owner, title, filterList, isAdd);
             fDiag.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
             if (owner != null) {

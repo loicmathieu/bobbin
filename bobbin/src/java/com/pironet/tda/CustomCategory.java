@@ -21,7 +21,7 @@
  */
 package com.pironet.tda;
 
-import com.pironet.tda.filter.Filter;
+import com.pironet.tda.filter.ThreadFilter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -59,7 +59,7 @@ public class CustomCategory {
      * add filter to category filters
      * @param filter
      */
-    public void addToFilters(Filter filter) {
+    public void addToFilters(ThreadFilter filter) {
         if(filters == null) {
             filters = new HashMap();
         }

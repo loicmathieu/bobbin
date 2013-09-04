@@ -142,6 +142,7 @@ import fr.loicmathieu.bobbin.gui.LinesTableModel;
 public class TDA extends JPanel implements ListSelectionListener, TreeSelectionListener, ActionListener, MenuListener {
 
 	private static final long serialVersionUID = -5202913524923361779L;
+	private static final int FONT_SIZE = 12;//LMA bigger font to read easily
 
 	private static JFileChooser fc;
 
@@ -187,13 +188,11 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 
 	private PreferencesDialog prefsDialog;
 
-	private FilterDialog filterDialog;
+	private ThreadFilterDialog filterDialog;
 
 	private CustomCategoriesDialog categoriesDialog;
 
 	private JTable histogramTable;
-
-	private JMenuItem showDumpMenuItem;
 
 	private DefaultMutableTreeNode logFile;
 
@@ -846,7 +845,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 						if (currentLAFI.getName().startsWith(instPlafs[i])) {
 							UIManager.setLookAndFeel(currentLAFI.getClassName());
 							// setup font
-							setUIFont(new FontUIResource("SansSerif", Font.PLAIN, 11));
+							setUIFont(new FontUIResource("SansSerif", Font.PLAIN, FONT_SIZE));
 							break search;
 						}
 					}
@@ -859,7 +858,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		}
 		catch (Exception except) {
 			// setup font
-			setUIFont(new FontUIResource("SansSerif", Font.PLAIN, 11));
+			setUIFont(new FontUIResource("SansSerif", Font.PLAIN, FONT_SIZE));
 		}
 	}
 
@@ -1327,7 +1326,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 
 		JPanel histogramView = new JPanel(new BorderLayout());
 		JPanel histoStatView = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
-		Font font = new Font("SansSerif", Font.PLAIN, 10);
+		Font font = new Font("SansSerif", Font.PLAIN, FONT_SIZE);
 		JLabel infoLabel = new JLabel(NumberFormat.getInstance().format(htm.getRowCount()) + " classes and base types");
 		infoLabel.setFont(font);
 		histoStatView.add(infoLabel);
@@ -1632,67 +1631,8 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 	}
 
 	public void createPopupMenu() {
-		JMenuItem menuItem;
-
 		// Create the popup menu.
-		JPopupMenu popup = new JPopupMenu();
-
-		menuItem = new JMenuItem("Diff Selection");
-		menuItem.addActionListener(this);
-		popup.add(menuItem);
-		menuItem = new JMenuItem("Find long running threads...");
-		menuItem.addActionListener(this);
-		popup.add(menuItem);
-
-		showDumpMenuItem = new JMenuItem("Show selected Dump in logfile");
-		showDumpMenuItem.addActionListener(this);
-		showDumpMenuItem.setEnabled(false);
-		if (!runningAsJConsolePlugin && !runningAsVisualVMPlugin) {
-			popup.addSeparator();
-			menuItem = new JMenuItem("Parse loggc-logfile...");
-			menuItem.addActionListener(this);
-			if (!PrefManager.get().getForceLoggcLoading()) {
-				menuItem.setEnabled(!isFoundClassHistogram);
-			}
-			popup.add(menuItem);
-
-			menuItem = new JMenuItem("Close logfile...");
-			menuItem.addActionListener(this);
-			popup.add(menuItem);
-			popup.addSeparator();
-			popup.add(showDumpMenuItem);
-		}
-		else {
-			popup.addSeparator();
-			if (!runningAsVisualVMPlugin) {
-				menuItem = new JMenuItem("Request Thread Dump...");
-				menuItem.addActionListener(this);
-				popup.add(menuItem);
-				popup.addSeparator();
-				menuItem = new JMenuItem("Preferences");
-				menuItem.addActionListener(this);
-				popup.add(menuItem);
-				menuItem = new JMenuItem("Filters");
-				menuItem.addActionListener(this);
-				popup.add(menuItem);
-				popup.addSeparator();
-				menuItem = new JMenuItem("Save Logfile...");
-				menuItem.addActionListener(this);
-				popup.add(menuItem);
-				popup.addSeparator();
-				menuItem = new JCheckBoxMenuItem("Show Toolbar", PrefManager.get().getShowToolbar());
-				menuItem.addActionListener(this);
-				popup.add(menuItem);
-				popup.addSeparator();
-				menuItem = new JMenuItem("Help");
-				menuItem.addActionListener(this);
-				popup.add(menuItem);
-				popup.addSeparator();
-			}
-			menuItem = new JMenuItem("About TDA");
-			menuItem.addActionListener(this);
-			popup.add(menuItem);
-		}
+		JPopupMenu popup = new com.pironet.tda.PopupMenu(this, runningAsJConsolePlugin, runningAsVisualVMPlugin, isFoundClassHistogram);
 
 		// Add listener to the text area so the popup menu can come up.
 		MouseListener popupListener = new PopupListener(popup);
@@ -1775,8 +1715,13 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		private void maybeShowPopup(MouseEvent e) {
 			if (e.isPopupTrigger()) {
 				popup.show(e.getComponent(), e.getX(), e.getY());
-				showDumpMenuItem.setEnabled((tree.getSelectionPath() != null)
-						&& ((DefaultMutableTreeNode) tree.getSelectionPath().getLastPathComponent()).getUserObject() instanceof ThreadDumpInfo);
+
+				//TODO find a better way to do this
+				boolean enableDumpMenu = (tree.getSelectionPath() != null)
+						&& ((DefaultMutableTreeNode) tree.getSelectionPath().getLastPathComponent()).getUserObject() instanceof ThreadDumpInfo;
+				if(popup instanceof com.pironet.tda.PopupMenu){
+					((com.pironet.tda.PopupMenu) popup).setDumpMenuItemVisibility(enableDumpMenu);
+				}
 			}
 		}
 	}
@@ -1819,7 +1764,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 			else if ("Preferences".equals(source.getText())) {
 				showPreferencesDialog();
 			}
-			else if ("Filters".equals(source.getText())) {
+			else if ("Thread Filters".equals(source.getText())) {
 				showFilterDialog();
 			}
 			else if ("Categories".equals(source.getText())) {
@@ -1843,18 +1788,6 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 			}
 			else if ("License".equals(source.getText())) {
 				showInfoFile("License Information", "doc/COPYING", "Document.gif");
-			}
-			else if ("Forum".equals(source.getText())) {
-				try {
-					Browser.open("https://tda.dev.java.net/servlets/ForumMessageList?forumID=1967");
-				}
-				catch (Exception ex) {
-					JOptionPane
-					.showMessageDialog(
-							this.getRootPane(),
-							"Error opening TDA Online Forum\nPlease open https://tda.dev.java.net/servlets/ForumMessageList?forumID=1967 in your browser!",
-							"Error", JOptionPane.ERROR_MESSAGE);
-				}
 			}
 			else if ("About TDA".equals(source.getText())) {
 				showInfo();
@@ -1937,7 +1870,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 			else if ("Find long running threads".equals(source.getToolTipText())) {
 				findLongRunningThreads();
 			}
-			else if ("Filters".equals(source.getToolTipText())) {
+			else if ("Thread Filters".equals(source.getToolTipText())) {
 				showFilterDialog();
 			}
 			else if ("Custom Categories".equals(source.getToolTipText())) {
@@ -2028,7 +1961,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 
 		// Create and set up the window.
 		if (filterDialog == null) {
-			filterDialog = new FilterDialog(getFrame());
+			filterDialog = new ThreadFilterDialog(getFrame());
 			filterDialog.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 		}
 
