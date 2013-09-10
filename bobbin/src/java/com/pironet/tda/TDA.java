@@ -41,7 +41,6 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
@@ -106,9 +105,7 @@ import javax.swing.plaf.FontUIResource;
 import javax.swing.text.Position;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
 
 import com.pironet.tda.jconsole.MBeanDumper;
 import com.pironet.tda.parser.DumpParser;
@@ -126,11 +123,11 @@ import com.pironet.tda.utils.TableSorter;
 import com.pironet.tda.utils.ThreadsTableModel;
 import com.pironet.tda.utils.ThreadsTableSelectionModel;
 import com.pironet.tda.utils.TipOfDay;
-import com.pironet.tda.utils.TreeRenderer;
 import com.pironet.tda.utils.ViewScrollPane;
 import com.pironet.tda.utils.jedit.JEditTextArea;
 import com.pironet.tda.utils.jedit.PopupMenu;
 
+import fr.loicmathieu.bobbin.gui.DumpTree;
 import fr.loicmathieu.bobbin.gui.LinesTableModel;
 
 /**
@@ -164,7 +161,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 
 	private JEditTextArea jeditPane;
 
-	protected JTree tree;
+	protected DumpTree tree;
 
 	protected DefaultTreeModel treeModel;
 
@@ -266,8 +263,8 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 	 */
 	public void init(boolean asJConsolePlugin, boolean asVisualVMPlugin) {
 		// init everything
-		tree = new JTree();
-		addTreeListener(tree);
+		//tree = new JTree();
+		//addTreeListener(tree);
 		runningAsJConsolePlugin = asJConsolePlugin;
 		runningAsVisualVMPlugin = asVisualVMPlugin;
 
@@ -309,16 +306,16 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 						navigateToThread(evt.getDescription());
 					}
 					else if (evt.getDescription().startsWith("dump")) {
-						navigateToDump();
+						tree.navigateToDump();
 					}
 					else if (evt.getDescription().startsWith("wait")) {
-						navigateToChild("Threads waiting");
+						tree.navigateToChild("Threads waiting");
 					}
 					else if (evt.getDescription().startsWith("sleep")) {
-						navigateToChild("Threads sleeping");
+						tree.navigateToChild("Threads sleeping");
 					}
 					else if (evt.getDescription().startsWith("dead")) {
-						navigateToChild("Deadlocks");
+						tree.navigateToChild("Deadlocks");
 					}
 					else if (evt.getDescription().startsWith("threaddump")) {
 						addMXBeanDump();
@@ -616,33 +613,6 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		sessionFc.setSelectedFile(null);
 	}
 
-	/**
-	 * expand all dump nodes in the root tree
-	 * 
-	 * @param expand true=expand, false=collapse.
-	 */
-	public void expandAllDumpNodes(boolean expand) {
-		TreeNode root = (TreeNode) tree.getModel().getRoot();
-		expandAll(tree, new TreePath(root), expand);
-	}
-
-	/**
-	 * expand all nodes of the currently selected category, only works for tree categories.
-	 */
-	private void expandAllCatNodes(boolean expand) {
-		DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-		JTree catTree = (JTree) ((TreeCategory) node.getUserObject()).getCatComponent(this);
-		if (expand) {
-			for (int i = 0; i < catTree.getRowCount(); i++) {
-				catTree.expandRow(i);
-			}
-		}
-		else {
-			for (int i = 0; i < catTree.getRowCount(); i++) {
-				catTree.collapseRow(i);
-			}
-		}
-	}
 
 	/**
 	 * show help dialog.
@@ -660,34 +630,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		displayCategory(node.getUserObject());
 	}
 
-	/**
-	 * expand or collapse all nodes of the specified tree
-	 * 
-	 * @param tree the tree to expand all/collapse all
-	 * @param parent the parent to start with
-	 * @param expand expand=true, collapse=false
-	 */
-	private void expandAll(JTree catTree, TreePath parent, boolean expand) {
-		// Traverse children
-		TreeNode node = (TreeNode) parent.getLastPathComponent();
-		if (node.getChildCount() >= 0) {
-			for (Enumeration e = node.children(); e.hasMoreElements();) {
-				TreeNode n = (TreeNode) e.nextElement();
-				TreePath path = parent.pathByAddingChild(n);
-				expandAll(catTree, path, expand);
-			}
-		}
 
-		if (parent.getPathCount() > 1) {
-			// Expansion or collapse must be done bottom-up
-			if (expand) {
-				catTree.expandPath(parent);
-			}
-			else {
-				catTree.collapsePath(parent);
-			}
-		}
-	}
 
 	private void saveSession() {
 		initSessionFc();
@@ -1005,12 +948,16 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		worker.start();
 	}
 
+	/**
+	 * LMA : extract TREE GUI in separate file
+	 */
 	protected void createTree() {
+
 		// Create a tree that allows multiple selection at a time.
 		if (topNodes.size() == 1) {
 			treeModel = new DefaultTreeModel(topNodes.get(0));
-			tree = new JTree(treeModel);
-			tree.setRootVisible(!runningAsJConsolePlugin && !runningAsVisualVMPlugin);
+			boolean rootVisible = !runningAsJConsolePlugin && !runningAsVisualVMPlugin;
+			tree = new DumpTree(this, treeModel, rootVisible, runningAsJConsolePlugin, runningAsVisualVMPlugin, isFoundClassHistogram);
 			addTreeListener(tree);
 			if (!runningAsJConsolePlugin && !runningAsVisualVMPlugin) {
 				frame.setTitle("TDA - Thread Dumps of " + dumpFile);
@@ -1022,8 +969,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 			for (int i = 0; i < topNodes.size(); i++) {
 				root.add(topNodes.get(i));
 			}
-			tree = new JTree(root);
-			tree.setRootVisible(false);
+			tree = new DumpTree(this, treeModel, false, runningAsJConsolePlugin, runningAsVisualVMPlugin, isFoundClassHistogram);
 			addTreeListener(tree);
 			if (!runningAsJConsolePlugin && !runningAsVisualVMPlugin) {
 				if (!frame.getTitle().endsWith("...")) {
@@ -1031,11 +977,6 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 				}
 			}
 		}
-
-		tree.setShowsRootHandles(true);
-		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
-
-		tree.setCellRenderer(new TreeRenderer());
 
 		// Create the scroll pane and add the tree to it.
 		ViewScrollPane treeView = new ViewScrollPane(tree, runningAsVisualVMPlugin);
@@ -1045,16 +986,11 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		Dimension minimumSize = new Dimension(200, 50);
 		treeView.setMinimumSize(minimumSize);
 
-		// Listen for when the selection changes.
-		tree.addTreeSelectionListener(this);
-
 		if (!runningAsJConsolePlugin && !runningAsVisualVMPlugin) {
 			dt = new DropTarget(tree, new FileDropTargetListener());
 		}
-
-		createPopupMenu();
-
 	}
+
 
 	/**
 	 * add a tree listener for enabling/disabling menu and toolbar icons.
@@ -1466,9 +1402,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 			}
 
 			if (found) {
-				TreePath monitorPath = new TreePath(logfileContent.getPath());
-				tree.setSelectionPath(monitorPath);
-				tree.scrollPathToVisible(monitorPath);
+				tree.navigateToPath(logfileContent.getPath());
 				displayLogFileContent(logfileContent.getUserObject());
 				jeditPane.setFirstLine(lineNumber - 1);
 			}
@@ -1517,9 +1451,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		}
 
 		if (searchPath != null) {
-			TreePath monitorPath = new TreePath(monitorNode.getPath());
-			tree.setSelectionPath(monitorPath);
-			tree.scrollPathToVisible(monitorPath);
+			tree.navigateToPath(monitorNode.getPath());
 
 			displayCategory(monitorNode.getUserObject());
 
@@ -1560,9 +1492,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		}
 
 		//jump to thread node
-		TreePath threadPath = new TreePath(threadNode.getPath());
-		tree.setSelectionPath(threadPath);
-		tree.scrollPathToVisible(threadPath);
+		tree.navigateToPath(threadNode.getPath());
 		displayCategory(threadNode.getUserObject());
 
 		//highlight chosen thread
@@ -1584,40 +1514,6 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		}
 	}
 
-	/**
-	 * navigate to root node of currently active dump
-	 */
-	private void navigateToDump() {
-		TreePath currentPath = tree.getSelectionPath();
-		tree.setSelectionPath(currentPath.getParentPath());
-		tree.scrollPathToVisible(currentPath.getParentPath());
-	}
-
-	/**
-	 * navigate to child of currently selected node with the given prefix in name
-	 * 
-	 * @param startsWith node name prefix (e.g. "Threads waiting")
-	 */
-	private void navigateToChild(String startsWith) {
-		TreePath currentPath = tree.getSelectionPath();
-		DefaultMutableTreeNode dumpNode = (DefaultMutableTreeNode) currentPath.getLastPathComponent();
-		Enumeration childs = dumpNode.children();
-
-		TreePath searchPath = null;
-		while ((searchPath == null) && childs.hasMoreElements()) {
-			DefaultMutableTreeNode child = (DefaultMutableTreeNode) childs.nextElement();
-			String name = child.toString();
-			if (name != null && name.startsWith(startsWith)) {
-				searchPath = new TreePath(child.getPath());
-			}
-		}
-
-		if (searchPath != null) {
-			tree.makeVisible(searchPath);
-			tree.setSelectionPath(searchPath);
-			tree.scrollPathToVisible(searchPath);
-		}
-	}
 
 	protected MainMenu getMainMenu() {
 		if ((frame != null) && (frame.getJMenuBar() != null)) {
@@ -1630,14 +1526,6 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		return (pluginMainMenu);
 	}
 
-	public void createPopupMenu() {
-		// Create the popup menu.
-		JPopupMenu popup = new com.pironet.tda.PopupMenu(this, runningAsJConsolePlugin, runningAsVisualVMPlugin, isFoundClassHistogram);
-
-		// Add listener to the text area so the popup menu can come up.
-		MouseListener popupListener = new PopupListener(popup);
-		tree.addMouseListener(popupListener);
-	}
 
 	/**
 	 * create a instance of this menu for a category
@@ -1694,6 +1582,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		return (monitorsPopupListener);
 	}
 
+	//TODO view if we ca delete it later
 	class PopupListener extends MouseAdapter {
 
 		JPopupMenu popup;
@@ -1719,8 +1608,8 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 				//TODO find a better way to do this
 				boolean enableDumpMenu = (tree.getSelectionPath() != null)
 						&& ((DefaultMutableTreeNode) tree.getSelectionPath().getLastPathComponent()).getUserObject() instanceof ThreadDumpInfo;
-				if(popup instanceof com.pironet.tda.PopupMenu){
-					((com.pironet.tda.PopupMenu) popup).setDumpMenuItemVisibility(enableDumpMenu);
+				if(popup instanceof fr.loicmathieu.bobbin.gui.PopupMenu){
+					((fr.loicmathieu.bobbin.gui.PopupMenu) popup).setDumpMenuItemVisibility(enableDumpMenu);
 				}
 			}
 		}
@@ -1832,19 +1721,19 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 				addMXBeanDump();
 			}
 			else if ("Expand all nodes".equals(source.getText())) {
-				expandAllCatNodes(true);
+				tree.expandAllCatNodes(true);
 			}
 			else if ("Collapse all nodes".equals(source.getText())) {
-				expandAllCatNodes(false);
+				tree.expandAllCatNodes(false);
 			}
 			else if ("Sort by thread count".equals(source.getText())) {
 				sortCatByThreads();
 			}
 			else if ("Expand all Dump nodes".equals(source.getText())) {
-				expandAllDumpNodes(true);
+				tree.expandAllDumpNodes(true);
 			}
 			else if ("Collapse all Dump nodes".equals(source.getText())) {
-				expandAllDumpNodes(false);
+				tree.expandAllDumpNodes(false);
 			}
 		}
 		else if (e.getSource() instanceof JButton) {
@@ -1862,10 +1751,10 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 				findLongRunningThreads();
 			}
 			else if ("Expand all nodes".equals(source.getToolTipText())) {
-				expandAllDumpNodes(true);
+				tree.expandAllDumpNodes(true);
 			}
 			else if ("Collapse all nodes".equals(source.getToolTipText())) {
-				expandAllDumpNodes(false);
+				tree.expandAllDumpNodes(false);
 			}
 			else if ("Find long running threads".equals(source.getToolTipText())) {
 				findLongRunningThreads();

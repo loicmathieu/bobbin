@@ -1,9 +1,10 @@
-package com.pironet.tda;
+package fr.loicmathieu.bobbin.gui;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
+import com.pironet.tda.TDA;
 import com.pironet.tda.utils.PrefManager;
 
 /**
