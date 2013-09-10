@@ -263,8 +263,6 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 	 */
 	public void init(boolean asJConsolePlugin, boolean asVisualVMPlugin) {
 		// init everything
-		//tree = new JTree();
-		//addTreeListener(tree);
 		runningAsJConsolePlugin = asJConsolePlugin;
 		runningAsVisualVMPlugin = asVisualVMPlugin;
 
@@ -805,24 +803,6 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		}
 	}
 
-	private String getInfoText() {
-		StringBuffer info = new StringBuffer("<html><body bgcolor=\"ffffff\"><font face=\"System\" size=+2><b>");
-		info.append("<img border=0 src=\"" + TDA.class.getResource("icons/TDA.gif") + "\">" + AppInfo.getAppInfo());
-		info.append("</b></font><hr fgcolor=\"#cccccc\"><font face=\"System\"><p>");
-		info.append("(C)opyright ");
-		info.append(AppInfo.getCopyright());
-		info.append(" - Ingo Rockel<br>");
-		info.append("Version: <b>");
-		info.append(AppInfo.getVersion());
-		info.append("</b><p>");
-		if (runningAsJConsolePlugin || runningAsVisualVMPlugin) {
-			info.append("<a href=\"threaddump://\">Request Thread Dump...</a>");
-		}
-		else {
-			info.append("Select File/Open to open your log file with thread dumps to start analyzing these thread dumps.<p>See Help/Overview for information on how to obtain a thread dump from your VM.</p></font></body></html>");
-		}
-		return (info.toString());
-	}
 
 	/**
 	 * init the basic display for showing dumps
@@ -1095,7 +1075,6 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		StringBuffer sb = new StringBuffer();
 		for (int row : rows) {
 			//addon LMA : enable different display for threads and lines
-			//TODO find a bette way to do this
 			if(ts.getTableModel() instanceof LinesTableModel){
 				appendThreadInfo(sb, ((LinesTableModel) ts.getTableModel()).getInfoObjectAtRow(ts.modelIndex(row)));
 			}
@@ -1505,11 +1484,6 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 
 				// this will automatically set the focus of the searched/selected row/value
 				searchTable.setRowSelectionInterval(row, row);
-
-				//                     for (int i = 0; i <= searchTable.getColumnCount() - 1; i++) {
-				//
-				//                    	 searchTable.getColumnModel().getColumn(i).setCellRenderer(new HighlightRenderer());
-				//                     }
 			}
 		}
 	}
@@ -1582,7 +1556,7 @@ public class TDA extends JPanel implements ListSelectionListener, TreeSelectionL
 		return (monitorsPopupListener);
 	}
 
-	//TODO view if we ca delete it later
+
 	class PopupListener extends MouseAdapter {
 
 		JPopupMenu popup;

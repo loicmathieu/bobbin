@@ -119,7 +119,7 @@ public class ThreadsTableModel extends AbstractTableModel {
      * @return the index of the row or -1 if not found.
      */
     public int searchRowWithName(int startRow, String name) {
-        int i = startRow;
+        int i = startRow + 1;
         boolean found = false;
         while(!found && (i < getRowCount())) {
             found = getInfoObjectAtRow(i++).getTokens()[0].indexOf(name) >= 0;
