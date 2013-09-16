@@ -15,6 +15,8 @@ import com.pironet.tda.utils.PrefManager;
  *
  */
 public class PopupMenu extends JPopupMenu {
+	private static final long serialVersionUID = 6487129526734029377L;
+
 	private TDA listener;
 	private boolean runningAsJConsolePlugin;
 	private boolean runningAsVisualVMPlugin;
