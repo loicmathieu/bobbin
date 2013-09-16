@@ -479,4 +479,36 @@ public class MainMenu extends JMenuBar {
 		toolbarButton.setFocusable(false);
 		return(toolbarButton);
 	}
+
+
+	/**
+	 * disable all menu items
+	 */
+	public void disableMenu() {
+		this.getLongMenuItem().setEnabled(false);
+		this.getCloseMenuItem().setEnabled(false);
+		this.getSaveSessionMenuItem().setEnabled(false);
+		this.getCloseToolBarButton().setEnabled(false);
+		this.getExpandButton().setEnabled(false);
+		this.getCollapseButton().setEnabled(false);
+		this.getFindLRThreadsToolBarButton().setEnabled(false);
+		this.getCloseAllMenuItem().setEnabled(false);
+		this.getExpandAllMenuItem().setEnabled(false);
+		this.getCollapseAllMenuItem().setEnabled(false);
+	}
+
+
+	/**
+	 * Enable all menu items
+	 */
+	public void enableMenu() {
+		this.getLongMenuItem().setEnabled(true);
+		this.getSaveSessionMenuItem().setEnabled(true);
+		this.getExpandButton().setEnabled(true);
+		this.getCollapseButton().setEnabled(true);
+		this.getFindLRThreadsToolBarButton().setEnabled(true);
+		this.getCloseAllMenuItem().setEnabled(true);
+		this.getExpandAllMenuItem().setEnabled(true);
+		this.getCollapseAllMenuItem().setEnabled(true);
+	}
 }

@@ -61,6 +61,7 @@ public class Line implements Serializable {
 
 	private void parseLineNumberInfo(String lineNumberInfo) {
 		//SocketInputStream.java:129
+                //AbstractAttributeValueImpl.java
 		//Native Method
 		//Unknown Source
 		if(UNKNOW_SOURCE.equals(lineNumberInfo)){
@@ -71,6 +72,10 @@ public class Line implements Serializable {
 			this.isNative = true;
 			this.lineNumber = NO_LINE_NUMBER;
 		}
+                else if(lineNumberInfo.indexOf(':') == -1){
+                    //no line numbers provided ...
+                    this.lineNumber = NO_LINE_NUMBER;
+                }
 		else {
 			//here we can parse the line number
 			String lineNumberAsStr = lineNumberInfo.substring(lineNumberInfo.indexOf(':') + 1);

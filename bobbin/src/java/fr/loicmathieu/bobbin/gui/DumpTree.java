@@ -6,15 +6,19 @@ import java.awt.event.MouseListener;
 import java.util.Enumeration;
 
 import javax.swing.JTree;
+import javax.swing.text.Position;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import com.pironet.tda.Logfile;
 import com.pironet.tda.TDA;
+import com.pironet.tda.TableCategory;
 import com.pironet.tda.ThreadDumpInfo;
 import com.pironet.tda.TreeCategory;
+import com.pironet.tda.utils.ColoredTable;
 import com.pironet.tda.utils.TreeRenderer;
 
 /**
@@ -186,6 +190,160 @@ public class DumpTree extends JTree {
 		}
 	}
 
+	/**
+	 * navigate to monitor
+	 * 
+	 * @param monitorLink the monitor link to navigate to
+	 * 
+	 * @return the node navigated to
+	 */
+	public DefaultMutableTreeNode navigateToMonitor(String monitorLink) {
+		String monitor = monitorLink.substring(monitorLink.lastIndexOf('/') + 1);
+
+		// find monitor node for this thread info
+		DefaultMutableTreeNode dumpNode = null;
+		if (monitorLink.indexOf("Dump No.") > 0) {
+			dumpNode = getDumpRootNode(monitorLink.substring(monitorLink.indexOf('/') + 1, monitorLink.lastIndexOf('/')),
+					(DefaultMutableTreeNode) this.getLastSelectedPathComponent());
+		}
+		else {
+			dumpNode = getDumpRootNode((DefaultMutableTreeNode) this.getLastSelectedPathComponent());
+		}
+		Enumeration childs = dumpNode.children();
+		DefaultMutableTreeNode monitorNode = null;
+		DefaultMutableTreeNode monitorWithoutLocksNode = null;
+		while (childs.hasMoreElements()) {
+			DefaultMutableTreeNode child = (DefaultMutableTreeNode) childs.nextElement();
+			if (child.getUserObject() instanceof TreeCategory) {
+				if (((TreeCategory) child.getUserObject()).getName().startsWith("Monitors (")) {
+					monitorNode = child;
+				}
+				else if (((TreeCategory) child.getUserObject()).getName().startsWith("Monitors without")) {
+					monitorWithoutLocksNode = child;
+				}
+			}
+		}
+
+		// highlight chosen monitor
+		JTree searchTree = (JTree) ((TreeCategory) monitorNode.getUserObject()).getCatComponent(tda);
+		TreePath searchPath = searchTree.getNextMatch(monitor, 0, Position.Bias.Forward);
+		if ((searchPath == null) && (monitorWithoutLocksNode != null)) {
+			searchTree = (JTree) ((TreeCategory) monitorWithoutLocksNode.getUserObject()).getCatComponent(tda);
+			searchPath = searchTree.getNextMatch(monitor, 0, Position.Bias.Forward);
+			monitorNode = monitorWithoutLocksNode;
+		}
+
+		if (searchPath != null) {
+			this.navigateToPath(monitorNode.getPath());
+
+			TreePath threadInMonitor = searchPath.pathByAddingChild(((DefaultMutableTreeNode) searchPath.getLastPathComponent()).getLastChild());
+			searchTree.setSelectionPath(threadInMonitor);
+			searchTree.scrollPathToVisible(searchPath);
+			searchTree.setSelectionPath(searchPath);
+
+			return monitorNode;
+		}
+
+		return null;
+	}
+
+	/**
+	 * addon LMA : navigate to the thread from a link
+	 * @param threadLink
+	 * @return the node navigated to
+	 */
+	public DefaultMutableTreeNode navigateToThread(String threadLink){
+		String tid = threadLink.substring(9);
+
+		//find dump node
+		DefaultMutableTreeNode dumpNode = null;
+		if (threadLink.indexOf("Dump No.") > 0) {
+			dumpNode = getDumpRootNode(threadLink.substring(threadLink.indexOf('/') + 1, threadLink.lastIndexOf('/')),
+					(DefaultMutableTreeNode) this.getLastSelectedPathComponent());
+		}
+		else {
+			dumpNode = getDumpRootNode((DefaultMutableTreeNode) this.getLastSelectedPathComponent());
+		}
+
+		//find Thread node
+		Enumeration childs = dumpNode.children();
+		DefaultMutableTreeNode threadNode = null;
+		while (childs.hasMoreElements()) {
+			DefaultMutableTreeNode child = (DefaultMutableTreeNode) childs.nextElement();
+			if (child.getUserObject() instanceof TableCategory) {
+				if (((TableCategory) child.getUserObject()).getName().startsWith("Threads (")) {
+					threadNode = child;
+				}
+			}
+		}
+
+		//jump to thread node
+		this.navigateToPath(threadNode.getPath());
+
+		//highlight chosen thread
+		ColoredTable searchTable = (ColoredTable) ((TableCategory) threadNode.getUserObject()).getCatComponent(tda);
+		for (int row = 0; row < searchTable.getRowCount(); row++) {
+			if (tid.equals(searchTable.getValueAt(row, 3).toString())) {
+
+				// this will automatically set the view of the scroll in the location of the value
+				searchTable.scrollRectToVisible(searchTable.getCellRect(row, 0, true));
+
+				// this will automatically set the focus of the searched/selected row/value
+				searchTable.setRowSelectionInterval(row, row);
+			}
+		}
+
+		return threadNode;
+	}
+
+	/**
+	 * search for dump root node of for given node
+	 * 
+	 * @param node starting to search for
+	 * @return root node returns null, if no root was found.
+	 */
+	private DefaultMutableTreeNode getDumpRootNode(DefaultMutableTreeNode node) {
+		// search for starting node
+		DefaultMutableTreeNode rootNode = node;
+		while (rootNode != null && !(rootNode.getUserObject() instanceof ThreadDumpInfo)) {
+			rootNode = (DefaultMutableTreeNode) rootNode.getParent();
+		}
+
+		return rootNode;
+	}
+
+	/**
+	 * get the dump with the given name, starting from the provided node.
+	 * 
+	 * @param dumpName
+	 * @return
+	 */
+	private DefaultMutableTreeNode getDumpRootNode(String dumpName, DefaultMutableTreeNode node) {
+		DefaultMutableTreeNode lastNode = null;
+		DefaultMutableTreeNode currentNode = node;
+		DefaultMutableTreeNode dumpNode = null;
+
+		// search for starting node
+		while (currentNode != null && !(currentNode.getUserObject() instanceof Logfile)) {
+			lastNode = currentNode;
+			currentNode = (DefaultMutableTreeNode) currentNode.getParent();
+		}
+
+		if (currentNode == null) {
+			currentNode = lastNode;
+		}
+
+		for (int i = 0; i < currentNode.getChildCount(); i++) {
+			Object userObject = ((DefaultMutableTreeNode) currentNode.getChildAt(i)).getUserObject();
+			if ((userObject instanceof ThreadDumpInfo) && ((ThreadDumpInfo) userObject).getName().startsWith(dumpName)) {
+				dumpNode = (DefaultMutableTreeNode) currentNode.getChildAt(i);
+				break;
+			}
+		}
+
+
+		return (dumpNode);
+	}
 
 	/**
 	 * Listener that defined a popup menu on all node of the tree
