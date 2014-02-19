@@ -27,7 +27,7 @@ public class LineTest extends TestCase {
 		assertTrue(line.isSourceUnknown());
 
 		line = new Line("$Proxy68.take(Unknown Source)");
-		assertEquals(null, line.getPackageName());
+		assertEquals("<no package>", line.getPackageName());
 		assertEquals("$Proxy68", line.getClassName());
 		assertEquals("take", line.getMethodName());
 		assertEquals(-1, line.getLineNumber());
