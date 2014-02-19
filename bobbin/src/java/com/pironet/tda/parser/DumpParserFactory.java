@@ -34,10 +34,13 @@ import com.pironet.tda.parser.impl.WrappedSunJDKParser;
 import com.pironet.tda.utils.DateMatcher;
 import com.pironet.tda.utils.PrefManager;
 
+import fr.loicmathieu.bobbin.parser.impl.AppdynamicsParser;
+
 /**
  * Factory for the dump parsers.
  *
  * @author irockel
+ * @author lmathieu
  */
 public class DumpParserFactory {
 	private static DumpParserFactory instance = null;
@@ -90,6 +93,9 @@ public class DumpParserFactory {
 					currentDumpParser = new SunJDKParser(bis, threadStore, lineCounter, withCurrentTimeStamp, startCounter, dm);
 				} else if(BeaJDKParser.checkForSupportedThreadDump(line)) {
 					currentDumpParser = new BeaJDKParser(bis, threadStore, lineCounter, dm);
+				}
+				else if(AppdynamicsParser.checkForSupportedThreadDump(line)){//LMA appdynamics parser
+					currentDumpParser = new AppdynamicsParser(bis, threadStore, lineCounter, withCurrentTimeStamp, startCounter, dm);
 				}
 				lineCounter++;
 			}

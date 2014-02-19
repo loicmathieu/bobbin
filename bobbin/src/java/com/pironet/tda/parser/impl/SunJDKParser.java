@@ -68,6 +68,8 @@ import fr.loicmathieu.bobbin.bo.Line;
  */
 public class SunJDKParser extends AbstractDumpParser {
 
+	private static final String FIRST_LINE_PATTERN = "Full thread dump";
+
 	private MutableTreeNode nextDump = null;
 	private Map<String, Map<String, String>> threadStore = null;
 	private int counter = 1;
@@ -184,7 +186,7 @@ public class SunJDKParser extends AbstractDumpParser {
 					lineCounter++;
 					singleLineCounter++;
 					if (locked) {
-						if (line.indexOf("Full thread dump") >= 0) {
+						if (line.indexOf(getFirstLinePattenr()) >= 0) {
 							locked = false;
 							if (!withCurrentTimeStamp) {
 								overallTDI.setLogLine(lineCounter);
@@ -262,9 +264,10 @@ public class SunJDKParser extends AbstractDumpParser {
 							content = new StringBuffer("<body bgcolor=\"ffffff\"><pre><font size=" + TDA.getFontSizeModifier(-1) + ">");
 							content.append(line);
 							content.append("\n");
+
 							//if the title contains the thread state
-							if(title.contains("in ")){
-								String state = title.substring(title.indexOf("in ") + 3);
+							if(title.contains(" in ")){
+								String state = title.substring(title.indexOf(" in ") + 4);
 								if (state.indexOf(' ') > 0){
 									state = state.substring(0, state.indexOf(' '));
 								}
@@ -275,6 +278,19 @@ public class SunJDKParser extends AbstractDumpParser {
 								}
 								catch(IllegalArgumentException e){
 									//nothing here
+								}
+							}
+
+							//LMA : if the lock info is in the title (appdynamics)
+							if(title.contains(" on ") && ! title.contains(" waiting on ")) {
+								System.err.println();
+								monitorStack.push(line);
+
+								switch(threadState) {
+									case BLOCKED : inWaiting = true; break;
+									case WAITING :
+									case TIMED_WAITING : inSleeping = true; break;
+									default : break;
 								}
 							}
 
@@ -512,12 +528,16 @@ public class SunJDKParser extends AbstractDumpParser {
 		return (null);
 	}
 
+	protected String getFirstLinePattenr() {
+		return FIRST_LINE_PATTERN;
+	}
+
 	/**
 	 * addon LMA : extract a TID from the first line of a thread stack
 	 * @param line
 	 * @return
 	 */
-	private String extractTIDFromLine(String line) {
+	protected String extractTIDFromLine(String line) {
 		String tid = null;
 		if ((line.indexOf("tid=") >= 0) && (line.indexOf("nid=") >= 0)) {
 			tid = String.valueOf(Long.parseLong(line.substring(line.indexOf("tid=") + 6, line.indexOf("nid=") - 1), 16));
@@ -1154,6 +1174,7 @@ public class SunJDKParser extends AbstractDumpParser {
 	 */
 	@Override
 	public String[] getThreadTokens(String name) {
+		//"http-7003-378" daemon prio=10 tid=0x000000005cbad800 nid=0x3505 runnable [0x00002baa90a88000]->[http-7003-378, Daemon, 10, 1555748864, 13573, runnable, [0x00002baa90a88000]]
 		String[] tokens = null;
 
 		if (name.indexOf("prio") > 0) {
@@ -1215,10 +1236,10 @@ public class SunJDKParser extends AbstractDumpParser {
 		} else {
 			tokens = new String[3];
 			tokens[0] = name.substring(1, name.lastIndexOf('"'));
-			if (name.indexOf("nid=") > 0) {
+			if (name.indexOf("nid=") > 0 && name.indexOf("state=") > 0) {//LMA add state test to avoid false positive
 				tokens[1] = name.substring(name.indexOf("nid=") + 4, name.indexOf("state=") - 1);
 				tokens[2] = name.substring(name.indexOf("state=") + 6);
-			} else if (name.indexOf("t@") > 0) {
+			} else if (name.indexOf("t@") > 0 &&  name.indexOf("state=") > 0) {//LMA add state test to avoid false positive
 				tokens[1] = name.substring(name.indexOf("t@") + 2, name.indexOf("state=") - 1);
 				tokens[2] = name.substring(name.indexOf("state=") + 6);
 			} else {
@@ -1237,7 +1258,7 @@ public class SunJDKParser extends AbstractDumpParser {
 	 * @return true, if the start of a sun thread dump is detected.
 	 */
 	public static boolean checkForSupportedThreadDump(String logLine) {
-		return (logLine.trim().indexOf("Full thread dump") >= 0);
+		return (logLine.trim().indexOf(FIRST_LINE_PATTERN) >= 0);
 	}
 
 	protected String getNextLine() throws IOException {
