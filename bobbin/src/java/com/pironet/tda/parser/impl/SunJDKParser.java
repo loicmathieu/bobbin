@@ -262,8 +262,6 @@ public class SunJDKParser extends AbstractDumpParser {
 							// Second, initialize state for this new thread
 							title = line;
 							content = new StringBuffer("<body bgcolor=\"ffffff\"><pre><font size=" + TDA.getFontSizeModifier(-1) + ">");
-							content.append(line);
-							content.append("\n");
 
 							//if the title contains the thread state
 							if(title.contains(" in ")){
@@ -283,7 +281,7 @@ public class SunJDKParser extends AbstractDumpParser {
 
 							//LMA : if the lock info is in the title (appdynamics)
 							if(title.contains(" on ") && ! title.contains(" waiting on ")) {
-								System.err.println();
+								content.append(linkifyMonitor(line));
 								monitorStack.push(line);
 
 								switch(threadState) {
@@ -293,6 +291,10 @@ public class SunJDKParser extends AbstractDumpParser {
 									default : break;
 								}
 							}
+							else {
+								content.append(line);
+							}
+							content.append("\n");
 
 							//LMA : extract thread ID
 							tid = extractTIDFromLine(line);
@@ -578,7 +580,7 @@ public class SunJDKParser extends AbstractDumpParser {
 	 * add a monitor link for monitor navigation
 	 * @param line containing monitor
 	 */
-	private String linkifyMonitor(String line) {
+	protected String linkifyMonitor(String line) {
 		if (line != null && line.indexOf('<') >= 0) {
 			String begin = line.substring(0, line.indexOf('<'));
 			String monitor = line.substring(line.indexOf('<'), line.indexOf('>') + 1);

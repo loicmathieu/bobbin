@@ -109,19 +109,19 @@ public class MonitorMap implements Serializable {
 		}
 		if((line.indexOf('<') > 0)) {
 			String monitor = line.substring(line.indexOf('<'));
-			if (line.trim().startsWith("- waiting to lock") || line.trim().startsWith("- parking to wait") || line.contains(" BLOCKED on ")) {//LMA add block info for appdynamics dumps
+			if (line.trim().startsWith("- waiting to lock") || line.trim().startsWith("- parking to wait")) {
 				addWaitToMonitor(monitor, threadTitle, currentThread);
-			} else if (line.trim().startsWith("- waiting on") ||  line.contains(" BLOCKED on ")) {//LMA add sleeping info for appdynamics dumps
+			} else if (line.trim().startsWith("- waiting on")) {
 				addSleepToMonitor(monitor, threadTitle, currentThread);
 			} else {
 				addLockToMonitor(monitor, threadTitle, currentThread);
 			}
-		} else if(line.indexOf('@') > 0) {
+		} else if(line.indexOf('@') > 0) {//LMA appdynamics goes here
 			String monitor = "<" + line.substring(line.indexOf('@')+1) + "> (a " +
 					line.substring(line.lastIndexOf(' '),line.indexOf('@')) + ")";
-			if (line.trim().startsWith("- waiting to lock") || line.trim().startsWith("- parking to wait")) {
+			if (line.trim().startsWith("- waiting to lock") || line.trim().startsWith("- parking to wait") || line.contains(" BLOCKED on ")) {//add BLOCKED thread
 				addWaitToMonitor(monitor, threadTitle, currentThread);
-			} else if (line.trim().startsWith("- waiting on")) {
+			} else if (line.trim().startsWith("- waiting on") || line.contains(" WAITING on ") || line.contains(" TIMED_WAITING on ")) {//add WAITING and TIMED_WAITING here
 				addSleepToMonitor(monitor, threadTitle, currentThread);
 			} else {
 				addLockToMonitor(monitor, threadTitle, currentThread);
