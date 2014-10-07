@@ -117,8 +117,8 @@ public class MonitorMap implements Serializable {
 				addLockToMonitor(monitor, threadTitle, currentThread);
 			}
 		} else if(line.indexOf('@') > 0) {//LMA appdynamics goes here
-			String monitor = "<" + line.substring(line.indexOf('@')+1) + "> (a " +
-					line.substring(line.lastIndexOf(' '),line.indexOf('@')) + ")";
+			String monitor = "<" + line.substring(line.lastIndexOf('@')+1) + "> (a " +
+					line.substring(line.lastIndexOf(' '),line.lastIndexOf('@')) + ")";
 			if (line.trim().startsWith("- waiting to lock") || line.trim().startsWith("- parking to wait") || line.contains(" BLOCKED on ")) {//add BLOCKED thread
 				addWaitToMonitor(monitor, threadTitle, currentThread);
 			} else if (line.trim().startsWith("- waiting on") || line.contains(" WAITING on ") || line.contains(" TIMED_WAITING on ")) {//add WAITING and TIMED_WAITING here
